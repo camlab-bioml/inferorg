@@ -1,0 +1,127 @@
+---
+title: "inferorg: automatic inference and conversion of gene ID formats across organisms"
+author: 
+- name: "Kieran R Campbell"
+  affiliation:
+    - Lunenfeld-Tanenbaum Research Institute
+    - University of Toronto
+# package: inferorg
+output: 
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{inferorg: automatic inference and conversion of gene ID formats across organisms}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+abstract: >
+  Gene identifiers come in many formats across organisms. Sometimes it is advantageous to infer the organism or format a particular set of IDs correspond to, or indeed convert to a different format without asking the user what format they are currently in. The `inferorg` package aims to provide this functionality but providing a "best guess" of the organism and gene ID format given a particular set. 
+---
+
+# Installation
+
+
+# Inferring organism and gene ID format
+
+```{r}
+devtools::load_all("~/toronto/misc/inferorg")
+# library(inferorg)
+```
+
+
+## Basic usage
+
+To infer the organism and gene ID format, call the `inferorg` function. For example, for the human MHC-I genes:
+
+```{r}
+human_mhc_genes <- c("HLA-A", "HLA-B", "HLA-C")
+inferorg(human_mhc_genes)
+```
+
+This returns a list with four entries:
+
+* `organism`: the best guess of the organism the symbols correspond to
+* `format`: the best guess of the format the symbols correspond to
+* `confidence_organism`: the confidence in the guess of the organism
+* `confidence_format`: the confidence in the format
+
+For a full list of supported organisms and formats, see [supported ID formats and organisms](#supported).
+
+Sometimes identifiers match multiple organisms, such as `Tap1` and `Tap2` both matching mouse and rat. In this case the confidence score is lower, but the recommended organism is first in the preferred order given by [supported ID formats and organisms](#supported) (i.e. human before mouse before fruit fly):
+
+```{r}
+inferorg(c("Tap1", "Tap2"))
+```
+
+
+## How confidence scores are computed
+
+The confidence scores for each organism and format as follows:
+
+1. For every organism and format, the number of overlapping IDs in the provided list with those in the database (provided via the [annotables](https://github.com/stephenturner/annotables) package) is computed.
+2. The entry with the highest value is set as the inferred organism and format.
+3. To compute the organism confidence, the entry with the highest value is divided by the sum over all organisms. For $K$ organisms, if the overlap is the same with every organism then the confidence score is $\frac{1}{K}$. If the IDs only overlap with the most likely organism, the confidence score is $1$.
+4. The same procedure is repeated for the format.
+5. In both cases, the final score is multiplied by the proportion of input IDs that overlap with the best guess category. In other words, the confidence score is high only if (i) the IDs map uniquely to that organism/format and (ii) the majority of the provided IDs match.
+
+# Automatic conversion
+
+To convert automatically between formats we use the `autoconvert` function. Under-the-hood, this calls the `inferorg` function to work out the gene ID format and organism, before converting to the desired format (for that organism).
+
+For example, if we wish to convert the genes of the human MHC-I complex to ensembl IDs, we can call:
+
+```{r}
+human_mhc_genes <- c("HLA-A", "HLA-B", "HLA-C")
+autoconvert(human_mhc_genes, to = 'ensgene')
+```
+
+Similarly, we can convert the genes `Tap1` and `Tap2` in mouse to their entrez IDs:
+
+```{r}
+mouse_tap_genes <- c("Tap1", "Tap2")
+autoconvert(mouse_tap_genes, to = "entrez")
+```
+
+and we can convert these back to 
+
+```{r}
+
+autoconvert(c(21354, 21355), to = "symbol")
+```
+
+Note that if the gene ID format and/or organism can't be confidently inferred or any of the genes provided can't be confidently mapped, an `NA` is returned:
+
+```{r}
+autoconvert(c("fake", "gene"))
+```
+
+But be careful! Sometimes they will match, which is especially an issue for very small input genesets:
+
+```{r}
+autoconvert(c("made", "up", "gene"), to='ensgene')
+```
+
+
+# Supported ID formats and organisms {#supported}
+
+The following organisms are supported:
+
+* `human`
+* `mouse`
+* `fruit_fly`
+* `macaque`
+* `worm`
+* `chicken`
+* `rat`
+
+and the following gene ID formats:
+
+* `symbol`: HGNC symbol
+* `ensgene`: ensembl gene ID
+* `entrez`: entrez gene ID
+
+# Technical
+
+```{r}
+print(sessionInfo())
+```
+
+

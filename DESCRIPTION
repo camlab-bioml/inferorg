@@ -1,0 +1,16 @@
+Package: inferorg
+Type: Package
+Title: Infer organism and identifier type given a list of genes
+Version: 0.1.0
+Authors@R: person("Kieran", "Campbell", email = "kieranrcampbell@gmail.com", role = c("aut", "cre"))
+Description: Given a list of genes, infer what organism those genes correspond to and the identifier type (symbol, ensembl, entrez) along with confidence scores.
+License: Apache License (= 2.0)
+Encoding: UTF-8
+RoxygenNote: 7.1.2
+Suggests: 
+    testthat (>= 3.0.0),
+    BiocStyle, knitr, rmarkdown
+Depends:
+  annotables, plyr
+VignetteBuilder: knitr
+biocViews: DataRepresentation
