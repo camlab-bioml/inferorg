@@ -18,12 +18,19 @@ abstract: >
 
 # Installation
 
+To install the development version of `inferorg`, run
+
+```{r, eval=FALSE}
+devtools::install_github("camlab-bioml/inferorg")
+```
+
 
 # Inferring organism and gene ID format
 
+Load the package:
+
 ```{r}
-devtools::load_all("~/toronto/misc/inferorg")
-# library(inferorg)
+library(inferorg)
 ```
 
 
